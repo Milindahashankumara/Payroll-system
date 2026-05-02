@@ -1,0 +1,10 @@
+# Root-level secrets and local artifacts
+.env
+*.log
+
+# Common generated folders
+**/node_modules/
+**/build/
+**/bin/
+**/obj/
+.vs/

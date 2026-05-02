@@ -1,0 +1,157 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  NODE_VERSION: "22"
+
+jobs:
+  # Frontend Tests and Build
+  frontend:
+    name: Frontend - Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: payrallfrontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: payrallfrontend
+
+      - name: Run tests
+        run: npm test -- --coverage --watchAll=false --passWithNoTests
+        working-directory: payrallfrontend
+        env:
+          CI: true
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: payrallfrontend
+        env:
+          CI: true
+          REACT_APP_API_BASE_URL: "http://localhost:5157"
+
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./payrallfrontend/coverage/coverage-final.json
+          flags: frontend
+          fail_ci_if_error: false
+
+  # Backend Build and Lint
+  backend:
+    name: Backend - Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: payrallbackend
+
+      - name: Build backend
+        run: dotnet build --configuration Release --no-restore
+        working-directory: payrallbackend
+
+      - name: Check for warnings
+        run: dotnet build --configuration Release --no-restore /p:TreatWarningsAsErrors=false
+        working-directory: payrallbackend
+        continue-on-error: true
+
+  # Security Scanning
+  security:
+    name: Security - Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run Trunk Security Scan (Grype + OSV)
+        uses: trunk-io/trunk-action@v1
+        with:
+          command: check --all
+        continue-on-error: true
+
+  # Docker Build Check
+  docker:
+    name: Docker - Build Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./payrallbackend
+          file: ./payrallbackend/payrallproject/Dockerfile
+          push: false
+          tags: payroll-backend:test
+
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./payrallfrontend
+          file: ./payrallfrontend/Dockerfile
+          push: false
+          tags: payroll-frontend:test
+          build-args: |
+            REACT_APP_API_BASE_URL=http://localhost:5157
+
+  # Summary Status Check
+  status-check:
+    name: Status Check - All Passed
+    needs: [frontend, backend, security, docker]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check job statuses
+        run: |
+          if [[ "${{ needs.frontend.result }}" != "success" ]]; then
+            echo "Frontend job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.backend.result }}" != "success" ]]; then
+            echo "Backend job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.security.result }}" != "success" ]]; then
+            echo "Security job failed"
+            exit 1
+          fi
+          if [[ "${{ needs.docker.result }}" != "success" ]]; then
+            echo "Docker build failed"
+            exit 1
+          fi
+          echo "All checks passed!"

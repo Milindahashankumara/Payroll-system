@@ -1,0 +1,50 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: payroll-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./payrallbackend
+      dockerfile: ./payrallproject/Dockerfile
+    container_name: payroll-backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__dbstring: "Server=sqlserver;Database=payrall2;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      Jwt__Issuer: "http://localhost:5157"
+      Jwt__Audience: "http://localhost:5157"
+      Jwt__Key: "SGVsbG9Xb3JsZCE1MjMwNTIzMDUyMzA1MjMwNTIzMDUyMzA1MjMw"
+      EmailSettings__Email: ""
+      EmailSettings__Password: ""
+      EmailSettings__Host: "smtp.gmail.com"
+      EmailSettings__Displayname: "Arithmos"
+      EmailSettings__Port: "587"
+    ports:
+      - "5157:8080"
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./payrallfrontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_BASE_URL: "http://localhost:5157"
+    container_name: payroll-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
