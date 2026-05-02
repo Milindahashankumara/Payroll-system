@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { FaEdit, FaTrash, FaPlus, FaEye, FaSync } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
