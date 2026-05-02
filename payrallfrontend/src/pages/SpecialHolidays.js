@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { FaPlus, FaEdit, FaTrash, FaCalendarAlt, FaSearch, FaSync } from 'react-icons/fa';

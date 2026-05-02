@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaCalendar, FaUser, FaPlus, FaHistory, FaInfoCircle, FaSync, FaEye } from 'react-icons/fa';

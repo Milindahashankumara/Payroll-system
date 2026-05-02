@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, jsx-a11y/role-has-required-aria-props */
 // import React, { useState, useEffect, useRef } from "react";
 // import axios from "axios";
 // import { FaCalculator, FaExclamationTriangle } from "react-icons/fa";

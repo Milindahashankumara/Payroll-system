@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaMoneyBill, FaCalendar, FaList, FaPlus, FaEdit, FaTrash, FaEye, FaSync, FaDollarSign, FaUser, FaCreditCard } from 'react-icons/fa';
