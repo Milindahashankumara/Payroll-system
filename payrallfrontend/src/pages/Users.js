@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { FaEdit, FaTrash, FaPlus, FaEye } from "react-icons/fa";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -10,20 +10,20 @@ export default function Users() {
   const [editUser, setEditUser] = useState({});
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    userName: '',
-    password: '',
-    confirmPassword: '',
-    role: 'Admin'
+    firstName: "",
+    lastName: "",
+    email: "",
+    userName: "",
+    password: "",
+    confirmPassword: "",
+    role: "Admin",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Available roles
-  const availableRoles = ['Admin'];
+  const availableRoles = ["Admin"];
 
   useEffect(() => {
     fetchUsers();
@@ -34,12 +34,12 @@ export default function Users() {
       setLoading(true);
       // This endpoint would need to be created in your API
       const res = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/auth/all`
+        `${process.env.REACT_APP_API_BASE_URL}/api/auth/all`,
       );
       setUsers(res.data);
     } catch (err) {
-      console.error('Error fetching users', err);
-      setError('Failed to load users');
+      console.error("Error fetching users", err);
+      setError("Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -48,13 +48,13 @@ export default function Users() {
   const fetchUserByEmail = async (email) => {
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_BASE_URL}/api/auth/${email}`
+        `${process.env.REACT_APP_API_BASE_URL}/api/auth/${email}`,
       );
       setSelectedUser(res.data);
       setIsModalOpen(true);
     } catch (err) {
-      console.error('Error fetching user details', err);
-      setError('Failed to load user details');
+      console.error("Error fetching user details", err);
+      setError("Failed to load user details");
     }
   };
 
@@ -72,36 +72,36 @@ export default function Users() {
     try {
       await axios.put(
         `${process.env.REACT_APP_API_BASE_URL}/api/auth/${editUser.email}`,
-        editUser
+        editUser,
       );
-      
+
       // Update local state
       setUsers((prev) =>
-        prev.map((u) => u.email === editUser.email ? editUser : u)
+        prev.map((u) => (u.email === editUser.email ? editUser : u)),
       );
-      
+
       setIsEditModalOpen(false);
-      setSuccess('User updated successfully!');
+      setSuccess("User updated successfully!");
     } catch (err) {
-      console.error('Error updating user', err);
-      setError('Failed to update user');
+      console.error("Error updating user", err);
+      setError("Failed to update user");
     }
   };
 
   const deleteUser = async (email) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-    
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
     try {
       // You'll need to create a delete endpoint in your API
       await axios.delete(
-        `${process.env.REACT_APP_API_BASE_URL}/api/auth/${email}`
+        `${process.env.REACT_APP_API_BASE_URL}/api/auth/${email}`,
       );
-      
+
       setUsers((prev) => prev.filter((u) => u.email !== email));
-      setSuccess('User deleted successfully!');
+      setSuccess("User deleted successfully!");
     } catch (err) {
-      console.error('Error deleting user', err);
-      setError('Failed to delete user');
+      console.error("Error deleting user", err);
+      setError("Failed to delete user");
     }
   };
 
@@ -113,33 +113,33 @@ export default function Users() {
   const createUser = async () => {
     // Validate passwords match
     if (newUser.password !== newUser.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_BASE_URL}/api/auth/register`,
-        newUser
+        newUser,
       );
-      
+
       // Add the new user to the state
       setUsers((prev) => [...prev, res.data]);
-      
+
       setIsCreateModalOpen(false);
-      setNewUser({ 
-        firstName: '', 
-        lastName: '', 
-        email: '', 
-        userName: '', 
-        password: '', 
-        confirmPassword: '', 
-        role: 'User' 
+      setNewUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        userName: "",
+        password: "",
+        confirmPassword: "",
+        role: "User",
       });
-      setSuccess('User created successfully!');
+      setSuccess("User created successfully!");
     } catch (err) {
-      console.error('Error creating user', err);
-      setError(err.response?.data?.message || 'Failed to create user');
+      console.error("Error creating user", err);
+      setError(err.response?.data?.message || "Failed to create user");
     }
   };
 
@@ -147,8 +147,8 @@ export default function Users() {
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
-        setError('');
-        setSuccess('');
+        setError("");
+        setSuccess("");
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -156,10 +156,14 @@ export default function Users() {
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
-      case 'Admin': return 'bg-red-100 text-red-800';
-      case 'Manager': return 'bg-purple-100 text-purple-800';
-      case 'Employee': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "Admin":
+        return "bg-red-100 text-red-800";
+      case "Manager":
+        return "bg-purple-100 text-purple-800";
+      case "Employee":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -175,7 +179,6 @@ export default function Users() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
@@ -216,11 +219,21 @@ export default function Users() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Username
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
@@ -230,9 +243,15 @@ export default function Users() {
                           <td className="px-6 py-4 text-sm text-gray-800">
                             {user.firstName} {user.lastName}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{user.userName}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">Admin</td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {user.email}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {user.userName}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            Admin
+                          </td>
                           <td className="px-6 py-4 text-center text-sm">
                             <div className="inline-flex items-center gap-2">
                               <button
@@ -262,7 +281,10 @@ export default function Users() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
+                        <td
+                          colSpan="5"
+                          className="px-6 py-8 text-center text-sm text-gray-500"
+                        >
                           No users found
                         </td>
                       </tr>
@@ -276,19 +298,28 @@ export default function Users() {
             <div className="sm:hidden space-y-4">
               {users.length > 0 ? (
                 users.map((user) => (
-                  <div key={user.email} className="bg-white shadow-sm rounded-lg p-4">
+                  <div
+                    key={user.email}
+                    className="bg-white shadow-sm rounded-lg p-4"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="text-sm font-medium text-gray-800">
                           {user.firstName} {user.lastName}
                         </div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                        <div className="text-xs text-gray-500">
+                          {user.email}
+                        </div>
                       </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                        {user.role || 'User'}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}
+                      >
+                        {user.role || "User"}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mb-3">Username: {user.userName}</div>
+                    <div className="text-xs text-gray-500 mb-3">
+                      Username: {user.userName}
+                    </div>
                     <div className="flex items-center gap-2">
                       <button
                         aria-label={`view-${user.email}`}
@@ -331,51 +362,61 @@ export default function Users() {
             <h2 className="text-xl font-bold mb-4">Edit User</h2>
             <form className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
+                </label>
                 <input
                   type="text"
                   name="firstName"
-                  value={editUser.firstName || ''}
+                  value={editUser.firstName || ""}
                   onChange={handleEditChange}
                   placeholder="First Name"
                   className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
                 <input
                   type="text"
                   name="lastName"
-                  value={editUser.lastName || ''}
+                  value={editUser.lastName || ""}
                   onChange={handleEditChange}
                   placeholder="Last Name"
                   className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
-                  value={editUser.email || ''}
+                  value={editUser.email || ""}
                   onChange={handleEditChange}
                   placeholder="Email"
                   className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
                 <input
                   type="text"
                   name="userName"
-                  value={editUser.userName || ''}
+                  value={editUser.userName || ""}
                   onChange={handleEditChange}
                   placeholder="Username"
                   className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
                 <select
                   name="role"
                   value="Admin"
@@ -426,7 +467,9 @@ export default function Users() {
             <h2 className="text-xl font-bold mb-4">Create New User</h2>
             <form className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
+                </label>
                 <input
                   type="text"
                   name="firstName"
@@ -438,7 +481,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
                 <input
                   type="text"
                   name="lastName"
@@ -450,7 +495,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -462,7 +509,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Username
+                </label>
                 <input
                   type="text"
                   name="userName"
@@ -474,7 +523,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -486,7 +537,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
                 <input
                   type="password"
                   name="confirmPassword"
@@ -498,7 +551,9 @@ export default function Users() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
                 <select
                   name="role"
                   value={newUser.role}
@@ -539,10 +594,19 @@ export default function Users() {
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4">User Details</h2>
             <div className="space-y-3">
-              <p><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</p>
-              <p><strong>Email:</strong> {selectedUser.email}</p>
-              <p><strong>Username:</strong> {selectedUser.userName}</p>
-              <p><strong>Role:</strong> Admin</p>
+              <p>
+                <strong>Name:</strong> {selectedUser.firstName}{" "}
+                {selectedUser.lastName}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedUser.email}
+              </p>
+              <p>
+                <strong>Username:</strong> {selectedUser.userName}
+              </p>
+              <p>
+                <strong>Role:</strong> Admin
+              </p>
             </div>
             <button
               onClick={() => setIsModalOpen(false)}
