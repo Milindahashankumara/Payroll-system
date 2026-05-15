@@ -95,7 +95,7 @@ jobs:
       - name: Run Trunk Security Scan (Grype + OSV)
         uses: trunk-io/trunk-action@v1
         with:
-          command: check --all
+          check-mode: all
         continue-on-error: true
 
   # Docker Build Check
