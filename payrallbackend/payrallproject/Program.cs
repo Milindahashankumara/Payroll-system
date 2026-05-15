@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using payrallproject.Data;
@@ -39,7 +40,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("dbstring")));
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("dbstring"));
+    options.ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+});
 
 builder.Services.AddAutoMapper(typeof(MapperProfiles).Assembly);
 
@@ -89,6 +93,114 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+    dbContext.Database.Migrate();
+
+    var adminRole = await dbContext.Roles.FirstOrDefaultAsync(role => role.Name == "Admin");
+    if (adminRole == null)
+    {
+        adminRole = new Roles
+        {
+            Name = "Admin",
+            NormalizedName = "ADMIN",
+            ConcurrencyStamp = Guid.NewGuid().ToString()
+        };
+        dbContext.Roles.Add(adminRole);
+        await dbContext.SaveChangesAsync();
+    }
+
+    var adminEmail = "admin@arithmos.com";
+    var adminUser = await dbContext.User.FirstOrDefaultAsync(user => user.Email == adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new User
+        {
+            Email = adminEmail,
+            FirstName = "Admin",
+            LastName = "User",
+            UserName = adminEmail,
+            NormalizedUserName = adminEmail.ToUpperInvariant(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@12345"),
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString()
+        };
+
+        dbContext.User.Add(adminUser);
+        await dbContext.SaveChangesAsync();
+
+        dbContext.UserRoles.Add(new UserRoles
+        {
+            UserId = adminUser.Id,
+            RolesId = adminRole.Id
+        });
+        await dbContext.SaveChangesAsync();
+    }
+
+    var employeeCategoriesSeed = new[]
+    {
+        new EmployeeCategories
+        {
+            CategoryName = "Staff",
+            Description = "Monthly salaried employees",
+            DaySalarybased = false,
+            IsActive = true
+        },
+        new EmployeeCategories
+        {
+            CategoryName = "Casual",
+            Description = "Day salary based employees",
+            DaySalarybased = true,
+            IsActive = true
+        }
+    };
+
+    foreach (var category in employeeCategoriesSeed)
+    {
+        var existingCategory = await dbContext.EmployeeCategories.FirstOrDefaultAsync(item => item.CategoryName == category.CategoryName);
+        if (existingCategory == null)
+        {
+            dbContext.EmployeeCategories.Add(category);
+        }
+    }
+
+    await dbContext.SaveChangesAsync();
+
+    var jobRolesSchemaSql = @"
+IF OBJECT_ID(N'[JobRoles]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [JobRoles] (
+        [Id] int NOT NULL IDENTITY,
+        [RoleName] nvarchar(255) NOT NULL,
+        [DepartmentId] int NULL,
+        [EmployeeCategoriesId] int NULL,
+        [IsActive] bit NULL CONSTRAINT [DF_JobRoles_IsActive] DEFAULT 1,
+        CONSTRAINT [PK_JobRoles] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_JobRoles_Departments] FOREIGN KEY ([DepartmentId]) REFERENCES [Departments] ([Id]),
+        CONSTRAINT [FK_JobRoles_EmployeeCategories] FOREIGN KEY ([EmployeeCategoriesId]) REFERENCES [EmployeeCategories] ([Id])
+    );
+END;
+
+IF COL_LENGTH('Employe', 'JobRoleId') IS NULL
+BEGIN
+    ALTER TABLE [Employe] ADD [JobRoleId] int NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE name = 'FK_Employe_JobRoles'
+)
+BEGIN
+    ALTER TABLE [Employe]
+    ADD CONSTRAINT [FK_Employe_JobRoles] FOREIGN KEY ([JobRoleId]) REFERENCES [JobRoles] ([Id]);
+END;
+";
+
+    await dbContext.Database.ExecuteSqlRawAsync(jobRolesSchemaSql);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
